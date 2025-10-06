@@ -3,7 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\ShopFileController;
+use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TabController;
+use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -15,8 +22,12 @@ use App\Http\Controllers\AuthController;
 |
 */
 
+Route::get('/captcha', [CaptchaController::class, 'get']);
+Route::post('/captcha/verify', [CaptchaController::class, 'verify']); //測試用
+
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+  return $request->user();
 });
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,8 +35,58 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [AuthController::class, 'user']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::put('/profile/update', [AuthController::class, 'updateProfile']);
-    Route::put('/password/change', [AuthController::class, 'changePassword']);
+  Route::get('/user', [AuthController::class, 'user']);
+  Route::post('/logout', [AuthController::class, 'logout']);
+  Route::put('/profile/update', [AuthController::class, 'updateProfile']);
+  Route::put('/password/change', [AuthController::class, 'changePassword']);
+  Route::post('/currentAddress/{id}', [AuthController::class, 'currentAddress']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/addrs', [AddressController::class, 'index']);   // 取得列表
+  Route::post('/addrs', [AddressController::class, 'store']);  // 新增
+  // Route::get('/addrs/{id}', [AddressController::class, 'show']); // 單筆
+  Route::put('/addrs/{id}', [AddressController::class, 'update']); // 更新
+  Route::delete('/addrs/{id}', [AddressController::class, 'destroy']); // 刪除
+});
+
+
+Route::get('/shop', [ShopController::class, 'index']);   // 取得列表
+Route::get('/shop/{id}', [ShopController::class, 'show']); // 單筆
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/shop', [ShopController::class, 'store']);  // 新增
+  Route::put('/shop/{id}', [ShopController::class, 'update']); // 更新
+  Route::delete('/shop/{id}', [ShopController::class, 'destroy']); // 刪除
+  Route::post('/shops/{shopId}/categories', [ShopController::class, 'assignToShop']);
+});
+
+
+Route::get('/category', [CategoryController::class, 'index']);   // 取得列表
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/category', [CategoryController::class, 'store']);  // 新增
+  Route::get('/category/{id}', [CategoryController::class, 'show']); // 單筆
+  Route::delete('/category/{id}', [CategoryController::class, 'destroy']); // 刪除
+});
+
+
+
+
+Route::get('/shop/{shopId}/products', [ProductController::class, 'index']);   // 取得列表
+Route::get('/shop/{shopId}/products/{id}', [ProductController::class, 'show']); // 單筆
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/shop/{shopId}/products', [ProductController::class, 'store']);  // 新增
+  Route::put('/shop/{shopId}/products/{id}', [ProductController::class, 'update']); // 更新
+  Route::delete('/shop/{shopId}/products/{id}', [ProductController::class, 'destroy']); // 刪除
+});
+
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/shop/{shopId}/tabs', [TabController::class, 'index']);   // 取得列表
+  Route::get('/shop/{shopId}/tabs/{id}', [TabController::class, 'show']); // 單筆
+  Route::post('/shop/{shopId}/tabs', [TabController::class, 'store']);  // 新增
+  Route::put('/shop/{shopId}/tabs/{id}', [TabController::class, 'update']); // 更新
+  Route::delete('/shop/{shopId}/tabs/{id}', [TabController::class, 'destroy']); // 刪除
+});
+// Route::apiResource('tabs', TabController::class);

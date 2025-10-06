@@ -7,20 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'name',
-    ];
+  protected $fillable = [
+    'name',
+  ];
 
-    /**
-     * 取得該商品所屬的商店（Shop）。
-     */
+  // 隱藏關聯欄位
+  protected $hidden = [
+    'pivot',
+    'created_at',
+    'updated_at',
+  ];
 
 
-    public function shops()
-    {
-        return $this->belongsToMany(Shop::class, 'category_shop');
-    }
-
+  /**
+   * 取得該商品所屬的商店（Shop）。
+   */
+  public function shops()
+  {
+    return $this->belongsToMany(Shop::class, 'shop_category');
+  }
 }
