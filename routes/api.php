@@ -10,6 +10,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
+use App\Http\Controllers\ScheduleController;
 use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
@@ -90,3 +91,21 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/shop/{shopId}/tabs/{id}', [TabController::class, 'destroy']); // 刪除
 });
 // Route::apiResource('tabs', TabController::class);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+  // 取得某店家的所有排程
+  Route::get('/shop/{shopId}/schedules', [ScheduleController::class, 'index']);
+
+  // 取得單筆排程
+  Route::get('/shop/{shopId}/schedules/{id}', [ScheduleController::class, 'show']);
+
+  // 新增排程
+  Route::post('/shop/{shopId}/schedules', [ScheduleController::class, 'store']);
+
+  // 更新排程
+  Route::put('/shop/{shopId}/schedules/{id}', [ScheduleController::class, 'update']);
+
+  // 刪除排程
+  Route::delete('/shop/{shopId}/schedules/{id}', [ScheduleController::class, 'destroy']);
+});

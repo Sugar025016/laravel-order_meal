@@ -114,7 +114,6 @@ class ShopController extends Controller
     $shop->categories()->sync($request->category_ids);
     $shop->load('categories');
 
-
     return $this->success('分類設定成功', ['shop' => $shop]);
   }
 }
