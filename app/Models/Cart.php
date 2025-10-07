@@ -7,24 +7,32 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
-    use HasFactory;
-    protected $fillable = [
-        'remark',
-        'qty',
-        'product_id',
-        'shop_id',
-        'user_id',
-    ];
+  use HasFactory;
+  protected $fillable = [
+    'remark',
+    'qty',
+    'product_id',
+    'shop_id',
+    'user_id',
+  ];
+  protected $hidden = [
+    'created_at',
+    'updated_at',
+  ];
 
-    
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
-    public function products()
-    {
-        return $this->hasMany(Product::class);
-    }
+  public function user()
+  {
+    return $this->belongsTo(User::class);
+  }
 
+  // public function products()
+  // {
+  //   return $this->hasMany(Product::class);
+  // }
+
+  public function product()
+  {
+    return $this->belongsTo(Product::class); // 單個產品
+  }
 }

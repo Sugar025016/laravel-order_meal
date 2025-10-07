@@ -4,13 +4,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AddressController;
-use App\Http\Controllers\ShopFileController;
 use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\CartController;
 use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
@@ -103,9 +103,15 @@ Route::middleware('auth:sanctum')->group(function () {
   // 新增排程
   Route::post('/shop/{shopId}/schedules', [ScheduleController::class, 'store']);
 
-  // 更新排程
-  Route::put('/shop/{shopId}/schedules/{id}', [ScheduleController::class, 'update']);
-
   // 刪除排程
   Route::delete('/shop/{shopId}/schedules/{id}', [ScheduleController::class, 'destroy']);
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/carts', [CartController::class, 'index']);        // 取得使用者購物車列表
+  Route::get('/carts/{id}', [CartController::class, 'show']);    // 單筆購物車
+  Route::post('/carts', [CartController::class, 'store']);       // 新增商品到購物車
+  Route::put('/carts/{id}', [CartController::class, 'update']);  // 更新購物車商品
+  Route::delete('/carts/{id}', [CartController::class, 'destroy']); // 刪除購物車商品
 });

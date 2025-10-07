@@ -13,11 +13,11 @@ class AuthController extends Controller
   {
     // return $this->success($request->all());
     // 先驗證 captcha
-    $captchaResult = $captcha->verify($request);
-    if ($captchaResult !== true) {
-      // 驗證碼錯誤，直接回傳
-      return $captchaResult;
-    }
+    // $captchaResult = $captcha->verify($request);
+    // if ($captchaResult !== true) {
+    //   // 驗證碼錯誤，直接回傳
+    //   return $captchaResult;
+    // }
 
     $request->validate([
       'name' => 'required|string',

@@ -96,7 +96,8 @@ class CaptchaController extends Controller
     ]);
 
     if ($validator->fails()) {
-      return response()->json(['message' => 'validation error', 'errors' => $validator->errors()], 422);
+      // return response()->json(['message' => 'validation error', 'errors' => $validator->errors()], 422);
+      return $this->error('驗證碼錯誤', $validator->errors(), 422);
     }
 
     $key = $request->input('captcha_key');
@@ -107,7 +108,8 @@ class CaptchaController extends Controller
     //   return response()->json(['message' => $key], 422);
     // }
     if (!Cache::has($cacheKey)) {
-      return response()->json(['message' => 'captcha expired or not found'], 422);
+      // return response()->json(['message' => 'captcha expired or not found'], 422);
+      return $this->error('驗證碼錯誤', ['captcha' => 'captcha expired or not found'], 422);
     }
 
     $expected = Cache::get($cacheKey);
@@ -116,7 +118,7 @@ class CaptchaController extends Controller
     Cache::forget($cacheKey);
 
     if ($expected !== $value) {
-      return response()->json(['message' => 'captcha mismatch'], 422);
+      return $this->error('驗證碼錯誤', ['captcha' => 'captcha mismatch'], 422);
     }
 
     return true;
