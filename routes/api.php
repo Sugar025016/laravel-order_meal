@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
@@ -114,4 +115,12 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/carts', [CartController::class, 'store']);       // 新增商品到購物車
   Route::put('/carts/{id}', [CartController::class, 'update']);  // 更新購物車商品
   Route::delete('/carts/{id}', [CartController::class, 'destroy']); // 刪除購物車商品
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/orders', [OrderController::class, 'index']);        // 取得使用者訂單列表
+  Route::get('/orders/{id}', [OrderController::class, 'show']);    // 單筆訂單
+  Route::post('/orders/{shopId}', [OrderController::class, 'store']);       // 新增訂單
+  Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
+  Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
 });

@@ -25,7 +25,7 @@ return new class extends Migration
       $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
       // $table->foreign('sku_id')->references('id')->on('product_skus')->onDelete('cascade');//連接庫存，目前沒寫
 
-      $table->unique(['user_id', 'product_id']);
+      // $table->unique(['user_id', 'product_id']);
     });
   }
 

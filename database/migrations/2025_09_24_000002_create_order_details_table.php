@@ -15,9 +15,9 @@ return new class extends Migration {
       // $table->unsignedBigInteger('sku_id')->nullable(); // 如果有 SKU
 
       $table->string('product_name', 255); // 冗餘存快照
-      $table->decimal('product_price', 10, 2); // 當時價格
+      $table->decimal('product_price', 10); // 當時價格
       $table->integer('qty')->default(1);
-      $table->decimal('total_price', 10, 2); // 單價 * 數量
+      // $table->decimal('total_price', 10, 2); // 單價 * 數量
       $table->text('remark')->nullable(); // 備註
 
       $table->timestamps();

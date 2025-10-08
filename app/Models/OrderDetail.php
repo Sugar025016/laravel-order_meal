@@ -8,25 +8,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OrderDetail extends Model
 {
-    use HasFactory, SoftDeletes;
+  use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'remark',
-        'qty',
-        'price',
-        'product_id',
-        'order_id',
-    ];
+  protected $fillable = [
+    'product_name',
+    'remark',
+    'qty',
+    'product_price',
+    'product_id',
+    'order_id',
+  ];
+  // 隱藏 created_at 和 updated_at
+  protected $hidden = [
+    'created_at',
+    'updated_at',
+  ];
 
+  public function product()
+  {
+    return $this->belongsTo(Product::class);
+  }
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function order()
-    {
-        return $this->belongsTo(Order::class);
-    }
+  public function order()
+  {
+    return $this->belongsTo(Order::class);
+  }
 }
