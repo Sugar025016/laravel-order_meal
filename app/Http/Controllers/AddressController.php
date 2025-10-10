@@ -23,7 +23,7 @@ class AddressController extends Controller
       'lng' => 'numeric',
     ]);
 
-    $user = \App\Models\Address::create([
+    $user = Address::create([
       'user_id' => $request->user()->id,
       'address_data_id' => $request->address_data_id,
       'detail' => $request->detail,
