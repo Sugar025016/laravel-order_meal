@@ -124,3 +124,31 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
   Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
 });
+
+
+// Route::middleware('auth:sanctum')->group(function () {
+Route::get('/test', function (Request $request) {
+  return response()->json([
+    'code' => 200,
+    'message' => '成功取得資料！',
+    'data' => [
+      'id' => 1,
+      'name' => 'Laravel 測試商品',
+      'price' => 99.9,
+    ],
+  ]);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/testAuth', function (Request $request) {
+    return response()->json([
+      'code' => 200,
+      'message' => '成功取得資料！',
+      'data' => [
+        'id' => 1,
+        'name' => 'Laravel 測試商品',
+        'price' => 99.9,
+      ],
+    ]);
+  });
+});

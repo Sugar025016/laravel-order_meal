@@ -27,4 +27,12 @@ class Controller extends BaseController
       'errors' => $errors
     ], $code);
   }
+
+  // 精簡欄位資料
+  protected function transformData($data, $fields = [])
+  {
+    return $data->map(function ($item) use ($fields) {
+      return collect($item)->only($fields);
+    });
+  }
 }

@@ -8,13 +8,96 @@ use Illuminate\Validation\Rule;
 
 class ShopController extends Controller
 {
-  // 取得列表
-  public function index()
+  // 取得列表（可搜尋）
+  public function index(Request $request)
   {
+    // 🔹 接收查詢參數
+    $city = $request->input('city');
+    $area = $request->input('area');
+    $category = $request->input('category');
+    $keyword = $request->input('keyword');
 
-    $shop = Shop::with(['categories', 'products'])->get();
-    return response()->json($shop);
+    // 🔹 建立查詢
+    $query = Shop::query()
+      ->with(['categories']); // 預先載入關聯分類
+
+    // 🔹 城市搜尋
+    if (!empty($city)) {
+      $query->where('city', 'like', "%{$city}%");
+    }
+
+    // 🔹 地區搜尋
+    if (!empty($area)) {
+      $query->where('area', 'like', "%{$area}%");
+    }
+
+    // 🔹 分類搜尋（可用分類 ID 或名稱）
+    if (!empty($category)) {
+      $query->whereHas('categories', function ($q) use ($category) {
+        $q->where('categories.id', $category)
+          ->orWhere('categories.name', 'like', "%{$category}%");
+      });
+    }
+
+    // 🔹 關鍵字搜尋（同時搜尋店名 + 分類名）
+    if (!empty($keyword)) {
+      $query->where(function ($q) use ($keyword) {
+        $q->where('brand', 'like', "%{$keyword}%")
+          ->orWhere('branch', 'like', "%{$keyword}%")
+          ->orWhereHas('categories', function ($sub) use ($keyword) {
+            $sub->where('categories.name', 'like', "%{$keyword}%");
+          });
+      });
+    }
+
+    // 🔹 取得結果
+    $shops = $query->get();
+
+    // 🔹 指定回傳欄位
+    $fields = [
+      'id',
+      'brand',
+      'branch',
+      'phone',
+      'description',
+      'is_orderable',
+      'detail',
+      'image_path',
+      'address_data_id',
+      'city',
+      'area',
+      'street',
+    ];
+
+    $shops = $this->transformData($shops, $fields);
+
+    // 🔹 回傳 JSON
+    return $this->success('取得商家列表成功', $shops);
   }
+
+
+  // 取得列表
+  // public function index()
+  // {
+
+  //   $shops = Shop::all();
+  //   $fields = [
+  //     'id',
+  //     'brand',
+  //     'branch',
+  //     'phone',
+  //     'description',
+  //     'is_orderable',
+  //     'detail',
+  //     'image_path',
+  //     'address_data_id',
+  //     'city',
+  //     'area',
+  //     'street'
+  //   ];
+  //   $shops = $this->transformData($shops, $fields);
+  //   return response()->json($shops);
+  // }
 
   // 新增
   public function store(Request $request, CaptchaController $captcha)

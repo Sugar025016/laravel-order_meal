@@ -14,6 +14,6 @@ class CategoryController extends Controller
   public function index()
   {
     $categories = Category::all();
-    return $this->success('取得分類列表成功', ['categories' => $categories]);
+    return $this->success('取得分類列表成功', $categories);
   }
 }

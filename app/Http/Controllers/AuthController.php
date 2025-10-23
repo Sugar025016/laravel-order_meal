@@ -9,16 +9,8 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-  public function register(Request $request, CaptchaController $captcha)
+  public function register(Request $request)
   {
-    // return $this->success($request->all());
-    // 先驗證 captcha
-    // $captchaResult = $captcha->verify($request);
-    // if ($captchaResult !== true) {
-    //   // 驗證碼錯誤，直接回傳
-    //   return $captchaResult;
-    // }
-
     $request->validate([
       'name' => 'required|string',
       'email' => 'required|email|unique:users',
@@ -50,8 +42,7 @@ class AuthController extends Controller
 
     $user = Auth::user();
     $token = $user->createToken('api-token')->plainTextToken;
-    $user = $user->load('currentAddress');
-    return $this->success('登入成功', ['token' => $token, 'user' => $user]);
+    return $this->success('登入成功', ['token' => $token]);
   }
 
   // 登出
@@ -68,7 +59,7 @@ class AuthController extends Controller
     $user = $request->user()->load('currentAddress');
 
     // $user = $request->user()->load('currentAddress')->load('currentAddress.address_data'); // 同時抓取 addresses 關聯
-    return $this->success('取得使用者資料', $user);
+    return $this->success('取得使用者資料',  $user);
   }
 
   // 更新個人資料

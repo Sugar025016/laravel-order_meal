@@ -17,10 +17,10 @@ class AddressController extends Controller
   {
 
     $request->validate([
-      'address_data_id' => 'required|numeric',
-      'detail' => 'required|string',
-      'lat' => 'numeric',
-      'lng' => 'numeric',
+      'address_data_id' => 'required|integer|exists:address_data,id',
+      'detail' => 'required|string|max:512',
+      'lat' => 'nullable|numeric|between:-90,90',
+      'lng' => 'nullable|numeric|between:-180,180',
     ]);
 
     $user = Address::create([
@@ -74,10 +74,10 @@ class AddressController extends Controller
   public function update(Request $request, $id)
   {
     $request->validate([
-      'address_data_id' => $request->address_data_id,
-      'detail' => 'required|string',
-      'lat' => 'numeric',
-      'lng' => 'numeric',
+      'address_data_id' => 'sometimes|nullable|integer|exists:address_data,id',
+      'detail' => 'sometimes|required|string|max:512',
+      'lat' => 'nullable|numeric|between:-90,90',
+      'lng' => 'nullable|numeric|between:-180,180',
     ]);
     // 驗證該地址是否屬於當前使用者
     $user = $request->user();
