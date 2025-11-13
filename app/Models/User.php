@@ -35,7 +35,6 @@ class User extends Authenticatable
     'remember_token',
     'created_at',
     'updated_at',
-    'current_address_id',
     'currentAddressRelation',
   ];
 
@@ -73,5 +72,22 @@ class User extends Authenticatable
   public function address_data()
   {
     return $this->belongsTo(AddressData::class, 'address_data_id');
+  }
+
+  public function favoriteShops()
+  {
+    return $this->belongsToMany(Shop::class, 'favorite_shops')->withTimestamps();
+  }
+
+  public function carts()
+  {
+    return $this->hasMany(Cart::class);
+  }
+
+  public function getCartShopCountAttribute()
+  {
+    return $this->carts()
+      ->distinct('shop_id')
+      ->count('shop_id');
   }
 }

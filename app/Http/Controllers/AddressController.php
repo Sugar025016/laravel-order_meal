@@ -10,7 +10,7 @@ class AddressController extends Controller
   public function index(Request $request)
   {
     $user = $request->user();
-    return $this->success('取得地址列表成功', $user->addrs);
+    return $this->success('取得地址列表成功', {$user->addrs,$user->});
   }
 
   public function store(Request $request)

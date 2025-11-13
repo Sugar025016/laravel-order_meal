@@ -11,7 +11,9 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartShopController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\FavoriteShopController;
 use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
@@ -45,16 +47,17 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/addrs', [AddressController::class, 'index']);   // 取得列表
-  Route::post('/addrs', [AddressController::class, 'store']);  // 新增
-  // Route::get('/addrs/{id}', [AddressController::class, 'show']); // 單筆
-  Route::put('/addrs/{id}', [AddressController::class, 'update']); // 更新
-  Route::delete('/addrs/{id}', [AddressController::class, 'destroy']); // 刪除
+  Route::get('/addresses', [AddressController::class, 'index']);   // 取得列表
+  Route::post('/addresses', [AddressController::class, 'store']);  // 新增
+  // Route::get('/addresses/{id}', [AddressController::class, 'show']); // 單筆
+  Route::put('/addresses/{id}', [AddressController::class, 'update']); // 更新
+  Route::delete('/addresses/{id}', [AddressController::class, 'destroy']); // 刪除
 });
 
 
 Route::get('/shop', [ShopController::class, 'index']);   // 取得列表
 Route::get('/shop/{id}', [ShopController::class, 'show']); // 單筆
+
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/shop', [ShopController::class, 'store']);  // 新增
   Route::put('/shop/{id}', [ShopController::class, 'update']); // 更新
@@ -63,11 +66,11 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-Route::get('/category', [CategoryController::class, 'index']);   // 取得列表
+Route::get('/category', 'App\Http\Controllers\CategoryController@index');   // 取得列表
 Route::middleware('auth:sanctum')->group(function () {
-  Route::post('/category', [CategoryController::class, 'store']);  // 新增
-  Route::get('/category/{id}', [CategoryController::class, 'show']); // 單筆
-  Route::delete('/category/{id}', [CategoryController::class, 'destroy']); // 刪除
+  Route::post('/category', 'App\Http\Controllers\CategoryController@store');  // 新增
+  Route::get('/category/{id}', 'App\Http\Controllers\CategoryController@show'); // 單筆
+  Route::delete('/category/{id}', 'App\Http\Controllers\CategoryController@destroy'); // 刪除
 });
 
 
@@ -110,11 +113,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/carts', [CartController::class, 'index']);        // 取得使用者購物車列表
-  Route::get('/carts/{id}', [CartController::class, 'show']);    // 單筆購物車
-  Route::post('/carts', [CartController::class, 'store']);       // 新增商品到購物車
-  Route::put('/carts/{id}', [CartController::class, 'update']);  // 更新購物車商品
-  Route::delete('/carts/{id}', [CartController::class, 'destroy']); // 刪除購物車商品
+  Route::get('/carts', [CartShopController::class, 'index']);        // 取得使用者購物車列表
+  Route::get('/carts/{id}', [CartShopController::class, 'show']);    // 單筆購物車
+  Route::post('/carts', [CartShopController::class, 'store']);       // 新增商品到購物車
+  Route::put('/carts/{id}', [CartShopController::class, 'update']);  // 更新購物車商品
+  Route::delete('/carts/{id}', [CartShopController::class, 'destroy']); // 刪除購物車商品
+  Route::delete('/cartShop/{id}', [CartShopController::class, 'destroyCartShop']); // 刪除購物車Shop商品
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -123,6 +127,11 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/orders/{shopId}', [OrderController::class, 'store']);       // 新增訂單
   Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
   Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/favorite/{shop}', [FavoriteShopController::class, 'toggle']);
+  Route::get('/favorite-shops', [FavoriteShopController::class, 'list']);
 });
 
 

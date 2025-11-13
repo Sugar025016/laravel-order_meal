@@ -20,7 +20,9 @@ class Shop extends Model
     'delivery_km',
     'delivery_price',
     'phone_verified_at',
-    'address_data_id',
+    'city',
+    'area',
+    'street',
     'detail',
     'lat',
     'lng',
@@ -45,38 +47,34 @@ class Shop extends Model
   }
   // Accessor：合併 address_data 的欄位
   // protected $appends = ['city', 'area', 'street', 'category', 'products'];
-  protected $appends = ['city', 'area', 'street'];
+  // protected $appends = ['city', 'area', 'street'];
   public function fullAddress()
   {
     return "{$this->city}{$this->area}{$this->street}";
   }
 
-  public function addressData()
-  {
-    return $this->belongsTo(AddressData::class, 'address_data_id');
-  }
 
 
-  public function getCityAttribute()
-  {
-    return $this->addressData?->city;
-  }
+  // public function getCityAttribute()
+  // {
+  //   return $this->addressData?->city;
+  // }
 
-  public function getAreaAttribute()
-  {
-    return $this->addressData?->area;
-  }
+  // public function getAreaAttribute()
+  // {
+  //   return $this->addressData?->area;
+  // }
 
-  public function getStreetAttribute()
-  {
-    return $this->addressData?->street;
-  }
+  // public function getStreetAttribute()
+  // {
+  //   return $this->addressData?->street;
+  // }
 
   // 可選：完整地址
-  public function getFullAddressAttribute()
-  {
-    return "{$this->city}{$this->area}{$this->street}{$this->detail}";
-  }
+  // public function getFullAddressAttribute()
+  // {
+  //   return "{$this->city}{$this->area}{$this->street}{$this->detail}";
+  // }
 
   // public function getCategoryAttribute()
   // {
@@ -112,5 +110,14 @@ class Shop extends Model
   public function tabs()
   {
     return $this->hasMany(Tab::class);
+  }
+
+  public function fans()
+  {
+    return $this->belongsToMany(User::class, 'favorite_shops')->withTimestamps();
+  }
+  public function schedules()
+  {
+    return $this->hasMany(Schedule::class);
   }
 }

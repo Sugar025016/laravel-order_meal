@@ -39,6 +39,41 @@ class ShopCategorySeeder extends Seeder
             // shop_id 6：主食、火鍋
             ['shop_id' => 6, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
             ['shop_id' => 6, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 6, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 7, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 7, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 8, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 8, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 9, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 9, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 9, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 10, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 10, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 10, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 11, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 11, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 11, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 12, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 12, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 12, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 13, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 13, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 13, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
+
+            // shop_id 6：主食、火鍋
+            ['shop_id' => 14, 'category_id' => 2, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 14, 'category_id' => 5, 'created_at' => $now, 'updated_at' => $now],
+            ['shop_id' => 14, 'category_id' => 3, 'created_at' => $now, 'updated_at' => $now],
         ];
 
         DB::table('shop_category')->insert($data);

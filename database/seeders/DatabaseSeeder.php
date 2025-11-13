@@ -20,6 +20,13 @@ class DatabaseSeeder extends Seeder
       UserSeeder::class,
       ShopSeeder::class,
       ShopCategorySeeder::class,
+      ProductSeeder::class,
+      TabSeeder::class,
+      TabProductSeeder::class,
+      ScheduleSeeder::class,
+      CartShopSeeder::class,
+      CartItemSeeder::class,
+      // CartSeeder::class
     ]);
   }
 }

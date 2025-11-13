@@ -24,13 +24,15 @@ return new class extends Migration
       $table->integer('delivery_price')->default(0);
       $table->timestamp('phone_verified_at')->nullable();
 
+      $table->string('city')->nullable();
+      $table->string('area')->nullable();
+      $table->string('street')->nullable();
       $table->string('detail')->nullable();
       $table->double('lat', 10, 7)->default(0); // 精度更合理
       $table->double('lng', 10, 7)->default(0); // 精度更合理
 
       // 外鍵關聯
       $table->string('image_path')->nullable();
-      $table->unsignedBigInteger('address_data_id');
       $table->unsignedBigInteger('user_id');
 
       // Laravel 自動時間戳
@@ -41,7 +43,7 @@ return new class extends Migration
       // 外鍵約束
       $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
       // $table->integer('address_data_id')->unsigned();
-      $table->foreign('address_data_id')->references('id')->on('address_data')->onDelete('cascade');
+      // $table->foreign('address_data_id')->references('id')->on('address_data')->onDelete('cascade');
     });
 
     // category 與 shop 多對多中間表

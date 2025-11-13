@@ -57,7 +57,12 @@ class AuthController extends Controller
   {
     // return response()->json($request->user());
     $user = $request->user()->load('currentAddress');
+    // 只取喜愛商店的 id 陣列
+    $favoriteShopIds = $user->favoriteShops()->pluck('shops.id');
 
+    // 你可以把這個加到 user 回傳資料裡
+    $user->favoriteShopIds = $favoriteShopIds;
+    $user->cartShopCount = $user->getCartShopCountAttribute();
     // $user = $request->user()->load('currentAddress')->load('currentAddress.address_data'); // 同時抓取 addresses 關聯
     return $this->success('取得使用者資料',  $user);
   }

@@ -26,11 +26,38 @@ class UserSeeder extends Seeder
 
     // 一般使用者帳號
     User::updateOrCreate(
-      ['email' => 'user@example.com'],
+      ['email' => 'user1@example.com'],
       [
-        'name' => '一般使用者',
+        'name' => '一般使用者1',
         'password' => Hash::make('user1234'),
         'phone' => '0987654321',
+      ]
+    );
+    // 一般使用者帳號
+    User::updateOrCreate(
+      ['email' => 'user2@example.com'],
+      [
+        'name' => '一般使用者2',
+        'password' => Hash::make('user1234'),
+        'phone' => '0987654323',
+      ]
+    );
+    // 一般使用者帳號
+    User::updateOrCreate(
+      ['email' => 'user3@example.com'],
+      [
+        'name' => '一般使用者3',
+        'password' => Hash::make('user1234'),
+        'phone' => '0987654324',
+      ]
+    );
+    // 一般使用者帳號
+    User::updateOrCreate(
+      ['email' => 'user4@example.com'],
+      [
+        'name' => '一般使用者4',
+        'password' => Hash::make('user1234'),
+        'phone' => '0987654325',
       ]
     );
   }

@@ -46,6 +46,9 @@ class ShopController extends Controller
           ->orWhere('branch', 'like', "%{$keyword}%")
           ->orWhereHas('categories', function ($sub) use ($keyword) {
             $sub->where('categories.name', 'like', "%{$keyword}%");
+          })
+          ->orWhereHas('products', function ($sub) use ($keyword) {
+            $sub->where('name', 'like', "%{$keyword}%");
           });
       });
     }
@@ -61,12 +64,11 @@ class ShopController extends Controller
       'phone',
       'description',
       'is_orderable',
-      'detail',
       'image_path',
-      'address_data_id',
       'city',
       'area',
       'street',
+      'detail',
     ];
 
     $shops = $this->transformData($shops, $fields);
@@ -76,28 +78,6 @@ class ShopController extends Controller
   }
 
 
-  // 取得列表
-  // public function index()
-  // {
-
-  //   $shops = Shop::all();
-  //   $fields = [
-  //     'id',
-  //     'brand',
-  //     'branch',
-  //     'phone',
-  //     'description',
-  //     'is_orderable',
-  //     'detail',
-  //     'image_path',
-  //     'address_data_id',
-  //     'city',
-  //     'area',
-  //     'street'
-  //   ];
-  //   $shops = $this->transformData($shops, $fields);
-  //   return response()->json($shops);
-  // }
 
   // 新增
   public function store(Request $request, CaptchaController $captcha)
@@ -123,7 +103,15 @@ class ShopController extends Controller
     ]);
 
     $shop = Shop::create(array_merge(
-      $request->only(['brand', 'branch', 'phone', 'address_data_id', 'detail']),
+      $request->only([
+        'brand',
+        'branch',
+        'phone',
+        'city',
+        'area',
+        'street',
+        'detail'
+      ]),
       [
         'user_id' => $request->user()->id,
       ]
@@ -138,8 +126,9 @@ class ShopController extends Controller
   // 單筆
   public function show($id)
   {
-    $shop = Shop::findOrFail($id);
-    return response()->json($shop);
+
+    $shop = Shop::with(['tabs.products', 'schedules'])->find($id);
+    return $this->success('取得店家資料成功',  $shop);
   }
 
   // 更新

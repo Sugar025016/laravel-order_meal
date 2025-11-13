@@ -26,8 +26,8 @@ class ScheduleController extends Controller
   {
     $validatedData = $request->validate([
       '*.week' => 'required|integer|min:1|max:7',
-      '*.start_time' => 'required|date_format:H:i',
-      '*.end_time' => 'required|date_format:H:i|after:start_time',
+      '*.start_time' => 'required|integer',
+      '*.end_time' => 'required|integer|after:start_time',
     ]);
 
     // 刪掉該商家所有舊排程
