@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\Address;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -16,7 +15,6 @@ class DatabaseSeeder extends Seeder
   {
     $this->call([
       CategorySeeder::class,
-      AddressDataSeeder::class,
       UserSeeder::class,
       ShopSeeder::class,
       ShopCategorySeeder::class,
@@ -26,6 +24,7 @@ class DatabaseSeeder extends Seeder
       ScheduleSeeder::class,
       CartShopSeeder::class,
       CartItemSeeder::class,
+      AddressSeeder::class,
       // CartSeeder::class
     ]);
   }

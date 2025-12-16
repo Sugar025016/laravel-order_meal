@@ -24,7 +24,9 @@ class CartShopController extends Controller
       'cartItems.product',
 
       // 商店關聯，只抓需要的欄位
-      'shop'
+      'shop' => function ($query) {
+        $query->with('schedules'); // ← 加 schedules 
+      }
     ])
       ->where('user_id', $user->id)
       ->get();

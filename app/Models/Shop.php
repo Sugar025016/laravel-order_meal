@@ -45,9 +45,6 @@ class Shop extends Model
   {
     return $this->belongsTo(User::class);
   }
-  // Accessor：合併 address_data 的欄位
-  // protected $appends = ['city', 'area', 'street', 'category', 'products'];
-  // protected $appends = ['city', 'area', 'street'];
   public function fullAddress()
   {
     return "{$this->city}{$this->area}{$this->street}";

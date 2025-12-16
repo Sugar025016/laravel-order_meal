@@ -42,8 +42,6 @@ return new class extends Migration
 
       // 外鍵約束
       $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-      // $table->integer('address_data_id')->unsigned();
-      // $table->foreign('address_data_id')->references('id')->on('address_data')->onDelete('cascade');
     });
 
     // category 與 shop 多對多中間表

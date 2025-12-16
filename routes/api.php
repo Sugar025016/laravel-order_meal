@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
@@ -30,28 +31,37 @@ Route::get('/captcha', [CaptchaController::class, 'get']);
 Route::post('/captcha/verify', [CaptchaController::class, 'verify']); //測試用
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-  return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//   return $request->user();
+// });
 
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/verifyOtp', [AuthController::class, 'verifyOtp']);
+Route::post('/sendOtp', [AuthController::class, 'sendOtp']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/user', [AuthController::class, 'user']);
   Route::post('/logout', [AuthController::class, 'logout']);
-  Route::put('/profile/update', [AuthController::class, 'updateProfile']);
   Route::put('/password/change', [AuthController::class, 'changePassword']);
-  Route::post('/currentAddress/{id}', [AuthController::class, 'currentAddress']);
+  Route::post('/verifyPassword', [AuthController::class, 'verifyPassword']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/user', [UserController::class, 'user']);
+  // Route::put('/profile/update', [UserController::class, 'updateProfile']);
+  Route::post('/currentAddress/{id}', [UserController::class, 'currentAddress']);
+  Route::put('/user/name', [UserController::class, 'updateName']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/addresses', [AddressController::class, 'index']);   // 取得列表
   Route::post('/addresses', [AddressController::class, 'store']);  // 新增
-  // Route::get('/addresses/{id}', [AddressController::class, 'show']); // 單筆
   Route::put('/addresses/{id}', [AddressController::class, 'update']); // 更新
   Route::delete('/addresses/{id}', [AddressController::class, 'destroy']); // 刪除
+
+  // 設定目前外送地址
+  Route::patch('/addresses/{id}/current', [AddressController::class, 'setCurrent']);
 });
 
 
@@ -131,7 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/favorite/{shop}', [FavoriteShopController::class, 'toggle']);
-  Route::get('/favorite-shops', [FavoriteShopController::class, 'list']);
+  Route::get('/favorite', [FavoriteShopController::class, 'list']);
 });
 
 
