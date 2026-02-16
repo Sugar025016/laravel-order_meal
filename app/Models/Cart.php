@@ -31,6 +31,11 @@ class Cart extends Model
   //   return $this->hasMany(Product::class);
   // }
 
+  // public function shop()
+  // {
+  //   return $this->belongsTo(Shop::class); // 單個商店
+  // }
+
   public function product()
   {
     return $this->belongsTo(Product::class); // 單個產品

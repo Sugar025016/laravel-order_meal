@@ -4,102 +4,124 @@ namespace App\Services;
 
 use App\Models\Schedule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleService
 {
     /**
      * 新增排程（自動處理跨夜拆分）
      */
-    public function createSchedule(array $data)
+    // public function creat
+
+
+
+
+
+    const WEEK_MINUTES = 10080;
+    const DAY_MINUTES  = 1440;
+
+    /**
+     * 合併跨週時間（index 用）
+     */
+    public function mergeCrossWeek(array $schedules): array
     {
-        $week = $data['week'];
-        $start = $data['start_time']; // 分鐘
-        $end = $data['end_time'];     // 分鐘
-        $shopId = $data['shop_id'];
+        $crossWeekEndIndex = null;
+        $crossWeekStartIndex = null;
+        // Log::info('mergeCrossWeek start', [
+        //     'count' => count($schedules),
+        // ]);
+        Log::info('schedules------------', [
+            'value' => $schedules,
+        ]);
 
-        DB::transaction(function () use ($week, $start, $end, $shopId) {
 
-            // 如果是跨夜（例：23:00 → 02:00）
-            if ($end < $start) {
 
-                // 第一段：start → 24:00
-                Schedule::create([
-                    'shop_id' => $shopId,
-                    'week' => $week,
-                    'start_time' => $start,
-                    'end_time' => 1440, // 24:00
-                ]);
-
-                // 第二段：00:00 → end ，週數 +1（如果是週日，第八天視為週一）
-                $nextWeek = $week + 1;
-                if ($nextWeek > 7) {
-                    $nextWeek = 1;
-                }
-
-                Schedule::create([
-                    'shop_id' => $shopId,
-                    'week' => $nextWeek,
-                    'start_time' => 0,
-                    'end_time' => $end,
-                ]);
-            } else {
-                // 非跨夜
-                Schedule::create([
-                    'shop_id' => $shopId,
-                    'week' => $week,
-                    'start_time' => $start,
-                    'end_time' => $end,
-                ]);
+        foreach ($schedules as $key => $schedule) {
+            Log::info('schedules------------', [
+                'value' => $schedule['start_time'] . ' ~ ' . $schedule['end_time'],
+            ]);
+            if ($schedule['end_time'] == self::WEEK_MINUTES) {
+                $crossWeekEndIndex = $key;
             }
-        });
+            if ($schedule['start_time'] == 0) {
+                $crossWeekStartIndex = $key;
+            }
+
+            // Log::info("訊息crossWeekEndIndex:-----------",  ['index' => $crossWeekStartIndex]);
+        }
+
+
+        Log::info(' $crossWeekEndIndex  ~  $crossWeekStartIndex----------', [
+            'value' => $crossWeekEndIndex . ' ~ ' . $crossWeekStartIndex,
+        ]);
+
+        if ($crossWeekEndIndex !== null && $crossWeekStartIndex !== null) {
+            // Log::info("訊息crossWeekEndIndex:", $crossWeekStartIndex);
+            // Log::info("訊息crossWeekStartIndex:", $crossWeekEndIndex);
+            // echo  "Merging cross-week schedules\n" . $crossWeekStartIndex . " , " . $crossWeekEndIndex;
+            // dump("Merging cross-week schedules\n");
+            // dump($crossWeekStartIndex);
+            // dump($crossWeekEndIndex);
+            $newSegment = [
+                'id'         => null, // 或 'merged'
+                'shop_id'    => $schedules[$crossWeekEndIndex]['shop_id'],
+                'week'       => 7,
+                'start_time' => $schedules[$crossWeekEndIndex]['start_time'],
+                'end_time'   => $schedules[$crossWeekStartIndex]['end_time'] + self::WEEK_MINUTES,
+            ];
+
+            unset($schedules[$crossWeekEndIndex], $schedules[$crossWeekStartIndex]);
+            $schedules[] = $newSegment;
+        }
+        Log::info('array_values------------', [
+            'value' => $schedules,
+        ]);
+        return array_values($schedules);
     }
 
     /**
-     * 查詢時自動合併
+     * 拆跨週時間（store 用）
      */
-    public function getMergedSchedules($shopId)
+    public function splitCrossWeek(array $items): array
     {
-        $schedules = Schedule::where('shop_id', $shopId)
-            ->orderBy('week')
-            ->orderBy('start_time')
-            ->get()
-            ->groupBy('week');
+        $segments = [];
 
-        $merged = [];
+        foreach ($items as $item) {
+            $start = $item['start_time'];
+            $end   = $item['end_time'];
 
-        foreach ($schedules as $week => $slots) {
-
-            $temp = [];
-            $current = null;
-
-            foreach ($slots as $slot) {
-                if ($current === null) {
-                    $current = [
-                        'start_time' => $slot->start_time,
-                        'end_time' => $slot->end_time
-                    ];
-                    continue;
-                }
-
-                // 能合併（例：900~1200 + 1200~1500）
-                if ($slot->start_time == $current['end_time']) {
-                    $current['end_time'] = $slot->end_time;
-                } else {
-                    $temp[] = $current;
-                    $current = [
-                        'start_time' => $slot->start_time,
-                        'end_time' => $slot->end_time
-                    ];
-                }
+            if ($end > self::WEEK_MINUTES) {
+                $segments[] = ['start' => $start, 'end' => self::WEEK_MINUTES];
+                $segments[] = ['start' => 0, 'end' => $end - self::WEEK_MINUTES];
+            } else {
+                $segments[] = ['start' => $start, 'end' => $end];
             }
-
-            if ($current) {
-                $temp[] = $current;
-            }
-
-            $merged[$week] = $temp;
         }
 
-        return $merged;
+        return $segments;
+    }
+
+    /**
+     * 檢查時間是否重疊
+     */
+    public function assertNoOverlap(array $segments): void
+    {
+        usort($segments, fn($a, $b) => $a['start'] <=> $b['start']);
+
+        $lastEnd = null;
+        foreach ($segments as $seg) {
+            if ($lastEnd !== null && $seg['start'] < $lastEnd) {
+                throw new \Exception("時間段重疊：{$seg['start']}~{$seg['end']}");
+            }
+            $lastEnd = $seg['end'];
+        }
+    }
+
+    /**
+     * 計算 week（1~7）
+     */
+    public function calcWeek(int $startMinute): int
+    {
+        return intdiv($startMinute, self::DAY_MINUTES) + 1;
     }
 }

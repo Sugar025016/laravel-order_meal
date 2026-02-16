@@ -11,23 +11,28 @@ class Shop extends Model
   use HasFactory, SoftDeletes;
 
   protected $fillable = [
-    'brand',
-    'branch',
-    'phone',
-    'description',
-    'is_orderable',
-    'is_open',
-    'delivery_km',
-    'delivery_price',
-    'phone_verified_at',
-    'city',
-    'area',
-    'street',
-    'detail',
-    'lat',
-    'lng',
-    'image_path',
-    'user_id',
+    'brand',              // 品牌名稱
+    'branch',             // 分店名稱
+    'phone',              // 聯絡電話
+    'description',        // 店家描述 / 簡介
+
+    'is_orderable',       // 是否可下單
+    'is_open',            // 是否營業中
+
+    'delivery_km',        // 外送距離（公里）
+    'delivery_price',     // 外送費用
+
+    'phone_verified_at',  // 電話驗證時間
+    'city',               // 縣市
+    'area',               // 區域
+    'street',             // 街道
+    'detail',             // 詳細地址（樓層、門牌等）
+
+    'lat',                // 緯度
+    'lng',                // 經度
+
+    'image_path',         // 店家圖片路徑
+    'user_id',            // 所屬使用者 ID
   ];
 
   protected $hidden = [

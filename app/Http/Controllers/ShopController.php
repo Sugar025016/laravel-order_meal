@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Shop;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+use App\Services\ScheduleService;
 
 class ShopController extends Controller
 {
@@ -306,6 +309,10 @@ class ShopController extends Controller
     $userLat  = $request->input('lat');
     $userLng  = $request->input('lng');
 
+
+    //     estimated_delivery_time   // 系統算（現在是模擬）
+    // delivered_at              // 未來真實時間
+
     // ===== 時間計算 =====
     $now = now();
     // 現在時間換算成「一週內的絕對分鐘」
@@ -346,8 +353,8 @@ class ShopController extends Controller
                     )
                 ) AS distance
             ", [$userLat, $userLng, $userLat])
-        ->havingRaw('distance <= delivery_km')
-        ->orderBy('distance', 'asc');
+        ->havingRaw('distance <= delivery_km');
+      // ->orderBy('distance', 'asc');
     } else {
       if ($city) $query->where('city', 'like', "%{$city}%");
       if ($area) $query->where('area', 'like', "%{$area}%");
@@ -439,10 +446,31 @@ class ShopController extends Controller
   }
 
   // 單筆
-  public function show($id)
+  public function show($id, ScheduleService $scheduleService)
+  // public function show($id)
   {
-
+    // print_r("Merging cross-week schedules\n");
+    // fwrite(STDERR, "Merging cross-week schedules\n");
+    // fwrite(\STDERR, "Merging cross-week schedules\n");
+    // error_log("Merging cross-week schedules for shop $id");
+    Log::info("訊息");    // 輸出 INFO
+    Log::warning("警告"); // 輸出 WARNING
+    Log::error("錯誤");   // 輸出 ERROR
     $shop = Shop::with(['tabs.products', 'schedules'])->find($id);
+    // Log::info('shop------------', [
+    //   'value' => $shop->schedules->toArray(),
+    // ]);
+    // $merged = $scheduleService->mergeCrossWeek($shop->schedules->toArray());
+
+    // Log::info('merged-+++++++++++++++++++++-', [
+    //   'value' => $merged,
+    // ]);
+
+    // $shop->setRelation('schedules', collect($merged));
+
+    Log::info('shop------------', [
+      'value' => $shop,
+    ]);
     return $this->success('取得店家資料成功',  $shop);
   }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\Address;
 use App\Services\GeocodingService;
 
@@ -10,12 +11,23 @@ class AddressController extends Controller
 {
   public function index(Request $request)
   {
+    Log::error('add addresses request', [
+      'request' => $request->all(),
+    ]);
     $user = $request->user();
+    $addresses = $user->addrs;
+
+    Log::error('add addresses addresses', [
+      'addresses' => $addresses->all(),
+    ]);
 
     return $this->success('取得地址列表成功', [
-      'addresses' => $user->addrs,
+      'addresses' => $addresses,
       'currentAddress' =>  $user->currentAddress            // 地址列表
     ]);
+    //     return response()->json([
+    //     'test' => 'ok',
+    // ]);
   }
 
   public function store(Request $request, GeocodingService $geo)
@@ -71,7 +83,8 @@ class AddressController extends Controller
 
   public function update(Request $request, $id)
   {
-    $request->validate([
+    // 驗證請求資料
+    $validated = $request->validate([
       'city' => 'required|string',
       'area' => 'required|string',
       'street' => 'required|string',
@@ -81,10 +94,13 @@ class AddressController extends Controller
     $user = $request->user();
     // 檢查這個 address 是否屬於該 user
     $address = $user->addrs()->where('id', $id)->first();
+
     if (!$address) {
       return $this->error('Address 不存在', [], 422);
     }
 
+    // 更新地址
+    $address->update($validated);
 
     return $this->success('更新地址成功', $address);
   }

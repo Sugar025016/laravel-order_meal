@@ -11,7 +11,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\CartShopController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\FavoriteShopController;
@@ -134,7 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/orders', [OrderController::class, 'index']);        // 取得使用者訂單列表
   Route::get('/orders/{id}', [OrderController::class, 'show']);    // 單筆訂單
-  Route::post('/orders/{shopId}', [OrderController::class, 'store']);       // 新增訂單
+  Route::post('/orders/{cartShopId}', [OrderController::class, 'store']);       // 新增訂單
   Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
   Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
 });
@@ -142,6 +142,29 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/favorite/{shop}', [FavoriteShopController::class, 'toggle']);
   Route::get('/favorite', [FavoriteShopController::class, 'list']);
+});
+
+
+// Route::prefix('orders/{orderId}')->group(function () {
+//   Route::get('items', [OrderItemController::class, 'index']);
+// });
+
+// Route::patch('order-items/{id}', [OrderItemController::class, 'update']);
+// Route::post('order-items/{id}/report', [OrderItemController::class, 'customerReport']);
+
+Route::middleware('auth:sanctum')->group(function () {
+
+  // 歷史訂單（完成 / 取消）
+  Route::get('/orders/history', [OrderController::class, 'index']);
+
+  // 執行中訂單（待確認 / 製作中 / 配送中 / 問題訂單）
+  Route::get('/orders/ongoing', [OrderController::class, 'ongoing']);
+
+  // 建立新訂單
+  Route::post('/orders/{cartShopId}', [OrderController::class, 'store']);
+
+  // 取得單筆訂單
+  Route::get('/orders/{order}', [OrderController::class, 'show']);
 });
 
 

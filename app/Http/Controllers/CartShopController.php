@@ -42,7 +42,7 @@ class CartShopController extends Controller
   public function show($id)
   {
     $user = Auth::user();
-    $cartShop = CartShop::with(['shop', 'cartItems.product'])->where('user_id', $user->id)->findOrFail($id);
+    $cartShop = CartShop::with(['shop.schedules', 'cartItems.product'])->where('user_id', $user->id)->findOrFail($id);
 
     return response()->json([
       'status' => true,
@@ -50,6 +50,7 @@ class CartShopController extends Controller
     ]);
   }
   // 新增到購物車
+
   public function store(Request $request)
   {
 
@@ -61,9 +62,9 @@ class CartShopController extends Controller
     ]);
 
     $user = $request->user(); // 取得目前登入使用者
-
     DB::transaction(function () use ($user, $validated) {
-      // 先確認或建立該使用者在此商店的 CartShop
+
+      // 1️⃣ 取得或建立 CartShop
       $cartShop = CartShop::firstOrCreate(
         [
           'user_id' => $user->id,
@@ -71,17 +72,7 @@ class CartShopController extends Controller
         ]
       );
 
-      // 建立對應商品的 cart_item（同一商店內）
-      // CartItem::create(
-      //   [
-      //     'cart_shop_id' => $cartShop->id,
-      //     'product_id' => $validated['product_id'],
-      //     'qty' => $validated['qty'],
-      //     'remark' => $validated['remark']
-      //   ]
-      // );
-
-
+      // 2️⃣ 建立或更新 CartItem
       $cartItem = CartItem::firstOrNew([
         'cart_shop_id' => $cartShop->id,
         'product_id'   => $validated['product_id'],
@@ -89,38 +80,100 @@ class CartShopController extends Controller
       ]);
 
       if ($cartItem->exists) {
-        // 如果已經存在，就把數量加上去
         $cartItem->qty += $validated['qty'];
       } else {
-        // 如果是新建，就設定初始數量
         $cartItem->qty = $validated['qty'];
       }
 
-      // 儲存
       $cartItem->save();
 
-      // 2️⃣ 建立或更新 cart_item
-      // $cartItem = CartItem::firstOrNew([
-      //     'cart_shop_id' => $cartShop->id,
-      //     'product_id'   => $validated['product_id']
-      // ]);
-      // if ($cartItem->exists) {
-      //   // 若已存在，累加數量並更新備註（如有提供）
-      //   $cartItem->qty = $cartItem->qty + $validated['qty'];
-      //   if (isset($validated['remark'])) {
-      //     $cartItem->remark = $validated['remark'];
-      //   }
-      // } else {
-      //   // 新增項目
-      //   $cartItem->qty = $validated['qty'];
-      //   $cartItem->remark = $validated['remark'] ?? null;
-      // }
+      // 3️⃣ 新增完後，檢查是否超過 20 個 shop
+      $cartShopIds = CartShop::where('user_id', $user->id)
+        ->orderBy('created_at', 'asc') // 舊 → 新
+        ->pluck('id');
 
-      // $cartItem->save();
+      if ($cartShopIds->count() > 5) {
+        $removeIds = $cartShopIds
+          ->take($cartShopIds->count() - 5);
 
+        CartItem::whereIn('cart_shop_id', $removeIds)->delete();
+        CartShop::whereIn('id', $removeIds)->delete();
+      }
     });
+
     return $this->success('商品已加入購物車', []);
   }
+  // public function store(Request $request)
+  // {
+
+  //   $validated = $request->validate([
+  //     'product_id' => 'required|exists:products,id',
+  //     'qty' => 'required|integer|min:1',
+  //     'remark' => 'nullable|string|max:255',
+  //     'shop_id' => 'required|exists:shops,id',
+  //   ]);
+
+  //   $user = $request->user(); // 取得目前登入使用者
+
+  //   DB::transaction(function () use ($user, $validated) {
+  //     // 先確認或建立該使用者在此商店的 CartShop
+  //     $cartShop = CartShop::firstOrCreate(
+  //       [
+  //         'user_id' => $user->id,
+  //         'shop_id' => $validated['shop_id']
+  //       ]
+  //     );
+
+  //     // 建立對應商品的 cart_item（同一商店內）
+  //     // CartItem::create(
+  //     //   [
+  //     //     'cart_shop_id' => $cartShop->id,
+  //     //     'product_id' => $validated['product_id'],
+  //     //     'qty' => $validated['qty'],
+  //     //     'remark' => $validated['remark']
+  //     //   ]
+  //     // );
+
+
+  //     $cartItem = CartItem::firstOrNew([
+  //       'cart_shop_id' => $cartShop->id,
+  //       'product_id'   => $validated['product_id'],
+  //       'remark'       => $validated['remark'] ?? null,
+  //     ]);
+
+  //     if ($cartItem->exists) {
+  //       // 如果已經存在，就把數量加上去
+  //       $cartItem->qty += $validated['qty'];
+  //     } else {
+  //       // 如果是新建，就設定初始數量
+  //       $cartItem->qty = $validated['qty'];
+  //     }
+
+  //     // 儲存
+  //     $cartItem->save();
+
+  //     // 2️⃣ 建立或更新 cart_item
+  //     // $cartItem = CartItem::firstOrNew([
+  //     //     'cart_shop_id' => $cartShop->id,
+  //     //     'product_id'   => $validated['product_id']
+  //     // ]);
+  //     // if ($cartItem->exists) {
+  //     //   // 若已存在，累加數量並更新備註（如有提供）
+  //     //   $cartItem->qty = $cartItem->qty + $validated['qty'];
+  //     //   if (isset($validated['remark'])) {
+  //     //     $cartItem->remark = $validated['remark'];
+  //     //   }
+  //     // } else {
+  //     //   // 新增項目
+  //     //   $cartItem->qty = $validated['qty'];
+  //     //   $cartItem->remark = $validated['remark'] ?? null;
+  //     // }
+
+  //     // $cartItem->save();
+
+  //   });
+  //   return $this->success('商品已加入購物車', []);
+  // }
 
   // 更新購物車商品
   public function update(Request $request, $id)
