@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
-use App\Services\OtpService;
-use App\Models\User;
+use App\Models\Order;
 
 class UserController extends Controller
 {
@@ -25,24 +22,12 @@ class UserController extends Controller
     // 你可以把這個加到 user 回傳資料裡
     $user->favoriteShopIds = $favoriteShopIds;
     $user->cartShopCount = $user->getCartShopCountAttribute();
+    $user->ordersCount = Order::where('user_id', $user->id)->ongoing()->count();
+
     return $this->success('取得使用者資料',  $user);
   }
 
-  // 更新個人資料
-  // public function updateProfile(Request $request)
-  // {
-  //   $user = $request->user();
 
-  //   $request->validate([
-  //     'name' => 'required|string|max:50',
-  //   ]);
-
-  //   $user->update([
-  //     'name' => $request->name,
-  //   ]);
-
-  //   return $this->success('資料已更新', $user);
-  // }
 
   public function currentAddress(Request $request, $id)
   {

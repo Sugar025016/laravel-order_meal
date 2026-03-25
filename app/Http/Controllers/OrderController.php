@@ -26,19 +26,37 @@ class OrderController extends Controller
   /**
    * 訂單列表（可依使用者 / 狀態）
    */
-  public function index(Request $request)
+  // public function index(Request $request)
+
+  public function active()
+  {
+    $user = Auth::user();
+    $query = Order::query()
+      ->with(['items', 'shop'])
+      ->where('user_id', $user->id)
+      ->ongoing() // 👈 你已經有用 scope
+      ->orderByDesc('id');
+
+    return $this->success('成功', $query->get());
+  }
+
+
+  public function history(Request $request)
   {
     $validated = $request->validate([
       'per_page' => 'sometimes|integer|min:1|max:50',
       'page' => 'sometimes|integer|min:1',
     ]);
+
     $perPage = $validated['per_page'] ?? 10;
+    $page = $validated['page'] ?? 1;
+
     $query = Order::query()
       ->with(['items', 'shop'])
       ->where('user_id', $request->user()->id)
-      ->history()
+      ->history() // 👈 你已經有用 scope
       ->orderByDesc('id')
-      ->paginate($perPage, ['*'], 'page', $validated['page'] ?? 1);
+      ->paginate($perPage, ['*'], 'page', $page);
 
     return $this->success('成功', $query);
   }
@@ -59,6 +77,7 @@ class OrderController extends Controller
       'order_type'    => 'required|integer|in:1,2',
       'is_cutlery'    => 'boolean',
       'customer_note' => 'nullable|string',
+      'scheduled_time' => 'nullable|date_format:Y-m-d H:i:s',
       'estimated_delivery_time' => 'nullable|date_format:Y-m-d H:i:s',
     ]);
 
@@ -73,7 +92,7 @@ class OrderController extends Controller
         ->firstOrFail();
 
       // 2️⃣ 取得地址（快照）
-      $address = Address::where('id',  $user->default_address_id)
+      $address = Address::where('id',  $user->current_address_id)
         ->where('user_id', $user->id)
         ->firstOrFail();
 
@@ -104,6 +123,8 @@ class OrderController extends Controller
         'lng'    => $address->lng,
 
         'customer_note' => $validated['customer_note'] ?? null,
+        // 'scheduled_time' => $validated['scheduled_time'] ?? null,
+        'scheduled_time' => $validated['scheduled_time'] ?? null,
         'estimated_delivery_time' => $validated['estimated_delivery_time'] ?? null,
 
         'subtotal'      => $subtotal,
@@ -111,7 +132,8 @@ class OrderController extends Controller
         'total_price'   => $subtotal + $deliveryFee,
         'status'        => Order::STATUS_PENDING,
       ]);
-
+      $order->order_number = 'ORD' . now()->format('Ymd') . str_pad($order->id, 4, '0', STR_PAD_LEFT);
+      $order->save();
       // 5️⃣ cart_items → order_items
       foreach ($cartShop->cartItems as $cartItem) {
         OrderItem::create([
@@ -132,50 +154,33 @@ class OrderController extends Controller
       return $order;
     });
 
-    return $this->success('訂單建立成功', $order->load('items'), 201);
+    return $this->success('訂單建立成功', ['orderNumber' => $order->order_number], 201);
   }
 
 
   /**
    * 訂單詳情
    */
-  public function show($id)
+  public function show($orderNumber)
   {
     $order = Order::with(['items', 'shop'])
       ->where('user_id', auth()->id())
-      ->findOrFail($id);
+      ->where('order_number', $orderNumber)
+      ->firstOrFail();
 
     return response()->json([
       'data' => $order
     ]);
   }
 
-  // /**
-  //  * 更新訂單狀態（店家 / 系統）
-  //  */
-  // public function updateStatus(Request $request, $id)
-  // {
-  //   $validated = $request->validate([
-  //     'status' => 'required|integer|in:2,3,4,5,6,7'
-  //   ]);
 
-  //   $order = Order::findOrFail($id);
-
-  //   // 簡單狀態流轉防呆（面試加分）
-  //   if ($validated['status'] < $order->status) {
-  //     return response()->json([
-  //       'message' => '訂單狀態不可倒退'
-  //     ], 422);
-  //   }
-
-  //   $order->update([
-  //     'status' => $validated['status']
-  //   ]);
-
-  //   return response()->json([
-  //     'message' => '訂單狀態已更新'
-  //   ]);
-  // }
+  public function ongoingCount()
+  {
+    $ordersCount = Order::where('user_id', auth()->id())->ongoing()->count();
+    return response()->json([
+      'data' => $ordersCount
+    ]);
+  }
 
   /**
    * 取消訂單

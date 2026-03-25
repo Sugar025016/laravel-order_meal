@@ -127,31 +127,6 @@ class ScheduleController extends Controller
       'data' => $segments,
     ]);
   }
-  // public function store(Request $request, $shopId)
-  // {
-  //   $validatedData = $request->validate([
-  //     '*.week' => 'required|integer|min:1|max:7',
-  //     '*.start_time' => 'required|integer',
-  //     '*.end_time' => 'required|integer|after:start_time',
-  //   ]);
-
-  //   // 刪掉該商家所有舊排程
-  //   Schedule::where('shop_id', $shopId)->delete();
-
-  //   $results = [];
-
-  //   // 新增所有排程
-  //   foreach ($validatedData as $item) {
-  //     $schedule = Schedule::create(array_merge($item, ['shop_id' => $shopId]));
-  //     $results[] = $schedule;
-  //   }
-
-  //   return response()->json([
-  //     'status' => true,
-  //     'message' => '商家排程已更新',
-  //     'data' => $results,
-  //   ]);
-  // }
 
 
   // 刪除排程

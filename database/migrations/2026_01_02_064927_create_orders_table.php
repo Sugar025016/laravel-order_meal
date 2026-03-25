@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('shop_id')->constrained()->cascadeOnDelete();
 
+            // 新增訂單編號欄位
+            $table->string('order_number', 20)->unique()->nullable()->comment('訂單編號');
+
             $table->tinyInteger('order_type')->default(1)->comment('1=即時,2=預訂');
             $table->tinyInteger('delivery_type')->default(1)->comment('1=外送,2=自取');
             $table->tinyInteger('status')->default(1)->comment('訂單狀態');
@@ -43,8 +46,8 @@ return new class extends Migration
             $table->timestamp('estimated_delivery_time')->nullable(); // 系統估算送達時間
 
             $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('shop_id')->references('id')->on('shops')->cascadeOnDelete();
+            // $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            // $table->foreign('shop_id')->references('id')->on('shops')->cascadeOnDelete();
         });
     }
 

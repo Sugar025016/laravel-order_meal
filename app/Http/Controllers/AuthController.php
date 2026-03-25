@@ -129,8 +129,6 @@ class AuthController extends Controller
       'email' => 'required|email',
       'otp' => 'required|digits:6',
     ]);
-    // $stored = Cache::get("otp:$request->email");
-    // return $this->success('get OTP 成功', ['stored' => $stored]);
 
     try {
       $this->otpService->verifyOtp($request->email, $request->otp);

@@ -16,6 +16,8 @@ class Order extends Model
     'user_id',
     'shop_id',
 
+    'order_number',
+
     'order_type',
     'delivery_type',
     'status',
@@ -78,19 +80,21 @@ class Order extends Model
      |  常用狀態常數（推薦）
      |===================== */
 
-  public const STATUS_PENDING   = 1;
-  public const STATUS_ACCEPTED  = 2;
-  public const STATUS_COOKING   = 3;
-  public const STATUS_DELIVERING = 4;
-  public const STATUS_COMPLETED = 5;
-  public const STATUS_CANCELED  = 6;
-  public const STATUS_PROBLEM   = 7;
+  public const STATUS_PENDING    = 1; // 待處理
+  public const STATUS_ACCEPTED   = 2; // 已接單
+  public const STATUS_COOKING    = 3; // 製作中
+  public const STATUS_READY      = 4; // 已備餐
+  public const STATUS_DELIVERING = 5; // 配送中
+  public const STATUS_COMPLETED  = 6; // 已完成
+  public const STATUS_CANCELED   = 7; // 已取消
+  public const STATUS_PROBLEM    = 8; // 訂單異常
 
 
   public const ONGOING_STATUSES = [
     self::STATUS_PENDING,
     self::STATUS_ACCEPTED,
     self::STATUS_COOKING,
+    self::STATUS_READY,
     self::STATUS_DELIVERING,
     self::STATUS_PROBLEM,
   ];
@@ -102,7 +106,14 @@ class Order extends Model
 
   public function scopeOngoing($query)
   {
-    return $query->whereIn('status', self::ONGOING_STATUSES);
+    return $query->whereIn('status', [
+      self::STATUS_PENDING,
+      self::STATUS_ACCEPTED,
+      self::STATUS_COOKING,
+      self::STATUS_READY,
+      self::STATUS_DELIVERING,
+      self::STATUS_PROBLEM,
+    ]);
   }
 
   public function scopeHistory($query)

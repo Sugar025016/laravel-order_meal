@@ -31,9 +31,6 @@ Route::get('/captcha', [CaptchaController::class, 'get']);
 Route::post('/captcha/verify', [CaptchaController::class, 'verify']); //測試用
 
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//   return $request->user();
-// });
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/verifyOtp', [AuthController::class, 'verifyOtp']);
@@ -131,13 +128,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/cartShop/{id}', [CartShopController::class, 'destroyCartShop']); // 刪除購物車Shop商品
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/orders', [OrderController::class, 'index']);        // 取得使用者訂單列表
-  Route::get('/orders/{id}', [OrderController::class, 'show']);    // 單筆訂單
-  Route::post('/orders/{cartShopId}', [OrderController::class, 'store']);       // 新增訂單
-  Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
-  Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
-});
 
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/favorite/{shop}', [FavoriteShopController::class, 'toggle']);
@@ -145,23 +135,30 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-// Route::prefix('orders/{orderId}')->group(function () {
-//   Route::get('items', [OrderItemController::class, 'index']);
-// });
-
-// Route::patch('order-items/{id}', [OrderItemController::class, 'update']);
-// Route::post('order-items/{id}/report', [OrderItemController::class, 'customerReport']);
-
 Route::middleware('auth:sanctum')->group(function () {
 
-  // 歷史訂單（完成 / 取消）
-  Route::get('/orders/history', [OrderController::class, 'index']);
+  // =====================
+  // 固定路由（必須放在動態路由前面）
+  // =====================
+
+  // 歷史訂單（已完成 / 已取消）
+  // Route::get('/orders', [OrderController::class, 'index']);
+
+  Route::get('/orders/active', [OrderController::class, 'active']);
+  Route::get('/orders/history', [OrderController::class, 'history']);
 
   // 執行中訂單（待確認 / 製作中 / 配送中 / 問題訂單）
   Route::get('/orders/ongoing', [OrderController::class, 'ongoing']);
 
+  // 訂單數量（執行中）
+  Route::get('/orders/ongoing/count', [OrderController::class, 'ongoingCount']);
+
   // 建立新訂單
-  Route::post('/orders/{cartShopId}', [OrderController::class, 'store']);
+  Route::post('/orders/{cartShopId}', [OrderController::class, 'store'])->whereNumber('cartShopId');
+
+  // =====================
+  // 動態路由（放最後，避免衝突）
+  // =====================
 
   // 取得單筆訂單
   Route::get('/orders/{order}', [OrderController::class, 'show']);
