@@ -5,13 +5,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TabController;
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\CartShopController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\FavoriteShopController;
 use App\Models\ShopFile;
 /*
 |--------------------------------------------------------------------------
@@ -28,33 +31,40 @@ Route::get('/captcha', [CaptchaController::class, 'get']);
 Route::post('/captcha/verify', [CaptchaController::class, 'verify']); //測試用
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-  return $request->user();
-});
 
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/verifyOtp', [AuthController::class, 'verifyOtp']);
+Route::post('/sendOtp', [AuthController::class, 'sendOtp']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/user', [AuthController::class, 'user']);
   Route::post('/logout', [AuthController::class, 'logout']);
-  Route::put('/profile/update', [AuthController::class, 'updateProfile']);
   Route::put('/password/change', [AuthController::class, 'changePassword']);
-  Route::post('/currentAddress/{id}', [AuthController::class, 'currentAddress']);
+  Route::post('/verifyPassword', [AuthController::class, 'verifyPassword']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/addrs', [AddressController::class, 'index']);   // 取得列表
-  Route::post('/addrs', [AddressController::class, 'store']);  // 新增
-  // Route::get('/addrs/{id}', [AddressController::class, 'show']); // 單筆
-  Route::put('/addrs/{id}', [AddressController::class, 'update']); // 更新
-  Route::delete('/addrs/{id}', [AddressController::class, 'destroy']); // 刪除
+  Route::get('/user', [UserController::class, 'user']);
+  // Route::put('/profile/update', [UserController::class, 'updateProfile']);
+  Route::post('/currentAddress/{id}', [UserController::class, 'currentAddress']);
+  Route::put('/user/name', [UserController::class, 'updateName']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/addresses', [AddressController::class, 'index']);   // 取得列表
+  Route::post('/addresses', [AddressController::class, 'store']);  // 新增
+  Route::put('/addresses/{id}', [AddressController::class, 'update']); // 更新
+  Route::delete('/addresses/{id}', [AddressController::class, 'destroy']); // 刪除
+
+  // 設定目前外送地址
+  Route::patch('/addresses/{id}/current', [AddressController::class, 'setCurrent']);
 });
 
 
 Route::get('/shop', [ShopController::class, 'index']);   // 取得列表
 Route::get('/shop/{id}', [ShopController::class, 'show']); // 單筆
+
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/shop', [ShopController::class, 'store']);  // 新增
   Route::put('/shop/{id}', [ShopController::class, 'update']); // 更新
@@ -63,11 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-Route::get('/category', [CategoryController::class, 'index']);   // 取得列表
+Route::get('/category', 'App\Http\Controllers\CategoryController@index');   // 取得列表
 Route::middleware('auth:sanctum')->group(function () {
-  Route::post('/category', [CategoryController::class, 'store']);  // 新增
-  Route::get('/category/{id}', [CategoryController::class, 'show']); // 單筆
-  Route::delete('/category/{id}', [CategoryController::class, 'destroy']); // 刪除
+  Route::post('/category', 'App\Http\Controllers\CategoryController@store');  // 新增
+  Route::get('/category/{id}', 'App\Http\Controllers\CategoryController@show'); // 單筆
+  Route::delete('/category/{id}', 'App\Http\Controllers\CategoryController@destroy'); // 刪除
 });
 
 
@@ -110,19 +120,48 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/carts', [CartController::class, 'index']);        // 取得使用者購物車列表
-  Route::get('/carts/{id}', [CartController::class, 'show']);    // 單筆購物車
-  Route::post('/carts', [CartController::class, 'store']);       // 新增商品到購物車
-  Route::put('/carts/{id}', [CartController::class, 'update']);  // 更新購物車商品
-  Route::delete('/carts/{id}', [CartController::class, 'destroy']); // 刪除購物車商品
+  Route::get('/carts', [CartShopController::class, 'index']);        // 取得使用者購物車列表
+  Route::get('/carts/{id}', [CartShopController::class, 'show']);    // 單筆購物車
+  Route::post('/carts', [CartShopController::class, 'store']);       // 新增商品到購物車
+  Route::put('/carts/{id}', [CartShopController::class, 'update']);  // 更新購物車商品
+  Route::delete('/carts/{id}', [CartShopController::class, 'destroy']); // 刪除購物車商品
+  Route::delete('/cartShop/{id}', [CartShopController::class, 'destroyCartShop']); // 刪除購物車Shop商品
 });
 
+
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/orders', [OrderController::class, 'index']);        // 取得使用者訂單列表
-  Route::get('/orders/{id}', [OrderController::class, 'show']);    // 單筆訂單
-  Route::post('/orders/{shopId}', [OrderController::class, 'store']);       // 新增訂單
-  Route::put('/orders/{id}', [OrderController::class, 'update']);  // 更新訂單
-  Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // 刪除訂單
+  Route::post('/favorite/{shop}', [FavoriteShopController::class, 'toggle']);
+  Route::get('/favorite', [FavoriteShopController::class, 'list']);
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+
+  // =====================
+  // 固定路由（必須放在動態路由前面）
+  // =====================
+
+  // 歷史訂單（已完成 / 已取消）
+  // Route::get('/orders', [OrderController::class, 'index']);
+
+  Route::get('/orders/active', [OrderController::class, 'active']);
+  Route::get('/orders/history', [OrderController::class, 'history']);
+
+  // 執行中訂單（待確認 / 製作中 / 配送中 / 問題訂單）
+  Route::get('/orders/ongoing', [OrderController::class, 'ongoing']);
+
+  // 訂單數量（執行中）
+  Route::get('/orders/ongoing/count', [OrderController::class, 'ongoingCount']);
+
+  // 建立新訂單
+  Route::post('/orders/{cartShopId}', [OrderController::class, 'store'])->whereNumber('cartShopId');
+
+  // =====================
+  // 動態路由（放最後，避免衝突）
+  // =====================
+
+  // 取得單筆訂單
+  Route::get('/orders/{order}', [OrderController::class, 'show']);
 });
 
 

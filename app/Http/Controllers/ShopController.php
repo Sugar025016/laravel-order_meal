@@ -5,99 +5,123 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Shop;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
+
+use App\Services\ScheduleService;
 
 class ShopController extends Controller
 {
-  // 取得列表（可搜尋）
+
   public function index(Request $request)
   {
-    // 🔹 接收查詢參數
-    $city = $request->input('city');
-    $area = $request->input('area');
+    $request->validate([
+      'city' => 'nullable|string|max:50',
+      'area' => 'nullable|string|max:50',
+      'category' => 'nullable|integer',
+      'keyword' => 'nullable|string|max:100',
+      'lat'  => 'nullable|numeric|between:-90,90',
+      'lng'  => 'nullable|numeric|between:-180,180',
+    ]);
+
+    $city     = $request->input('city');
+    $area     = $request->input('area');
     $category = $request->input('category');
-    $keyword = $request->input('keyword');
+    $keyword  = $request->input('keyword');
+    $userLat  = $request->input('lat');
+    $userLng  = $request->input('lng');
 
-    // 🔹 建立查詢
+
+    //     estimated_delivery_time   // 系統算（現在是模擬）
+    // delivered_at              // 未來真實時間
+
+    // ===== 時間計算 =====
+    $now = now();
+    // 現在時間換算成「一週內的絕對分鐘」
+    // 假設星期一 = 0，星期日 = 6
+    $currentWeekIndex = $now->dayOfWeekIso - 1; // dayOfWeekIso: 1=Mon ... 7=Sun
+    $currentMinutes = $currentWeekIndex * 1440 + $now->hour * 60 + $now->minute;
+
+    // ===== Shop Query =====
     $query = Shop::query()
-      ->with(['categories']); // 預先載入關聯分類
+      ->with(['categories'])
+      ->select('shops.*')
+      ->selectRaw("
+            COALESCE((
+                SELECT COUNT(*)
+                FROM schedules
+                WHERE schedules.shop_id = shops.id
+                AND ? BETWEEN schedules.start_time AND schedules.end_time
+            ), 0) AS is_open_by_schedule
+        ", [$currentMinutes]);
 
-    // 🔹 城市搜尋
-    if (!empty($city)) {
-      $query->where('city', 'like', "%{$city}%");
+    // ===== 距離篩選 =====
+    if ($userLat && $userLng) {
+      $maxKm = env('DELIVERY_MAX_KM', 10);
+
+      $latRange = $maxKm / 111;
+      $lngRange = $maxKm / (111 * cos(deg2rad($userLat)));
+
+      $query->whereBetween('lat', [$userLat - $latRange, $userLat + $latRange])
+        ->whereBetween('lng', [$userLng - $lngRange, $userLng + $lngRange])
+        ->selectRaw("
+                (
+                    6371 * acos(
+                        cos(radians(?)) *
+                        cos(radians(shops.lat)) *
+                        cos(radians(shops.lng) - radians(?)) +
+                        sin(radians(?)) *
+                        sin(radians(shops.lat))
+                    )
+                ) AS distance
+            ", [$userLat, $userLng, $userLat])
+        ->havingRaw('distance <= delivery_km');
+      // ->orderBy('distance', 'asc');
+    } else {
+      if ($city) $query->where('city', 'like', "%{$city}%");
+      if ($area) $query->where('area', 'like', "%{$area}%");
     }
 
-    // 🔹 地區搜尋
-    if (!empty($area)) {
-      $query->where('area', 'like', "%{$area}%");
-    }
-
-    // 🔹 分類搜尋（可用分類 ID 或名稱）
-    if (!empty($category)) {
+    // ===== 類別篩選 =====
+    if ($category) {
       $query->whereHas('categories', function ($q) use ($category) {
         $q->where('categories.id', $category)
           ->orWhere('categories.name', 'like', "%{$category}%");
       });
     }
 
-    // 🔹 關鍵字搜尋（同時搜尋店名 + 分類名）
-    if (!empty($keyword)) {
+    // ===== 關鍵字篩選 =====
+    if ($keyword) {
       $query->where(function ($q) use ($keyword) {
         $q->where('brand', 'like', "%{$keyword}%")
           ->orWhere('branch', 'like', "%{$keyword}%")
-          ->orWhereHas('categories', function ($sub) use ($keyword) {
-            $sub->where('categories.name', 'like', "%{$keyword}%");
-          });
+          ->orWhereHas(
+            'categories',
+            fn($sub) => $sub->where('categories.name', 'like', "%{$keyword}%")
+          )
+          ->orWhereHas(
+            'products',
+            fn($sub) => $sub->where('name', 'like', "%{$keyword}%")
+          );
       });
     }
 
-    // 🔹 取得結果
+    // ===== 排序：手動 is_open優先，其次 schedule 開店 =====
+    $query->orderBy('is_open', 'desc')
+      ->orderBy('is_open_by_schedule', 'desc');
+
     $shops = $query->get();
 
-    // 🔹 指定回傳欄位
-    $fields = [
-      'id',
-      'brand',
-      'branch',
-      'phone',
-      'description',
-      'is_orderable',
-      'detail',
-      'image_path',
-      'address_data_id',
-      'city',
-      'area',
-      'street',
-    ];
+    // ===== 收斂 is_open：手動開店 OR 排程開店（1 → 開、0 → 關） =====
+    $shops->transform(function ($shop) {
+      $shop->is_open = ($shop->is_open == 1 && $shop->is_open_by_schedule > 0);
+      unset($shop->is_open_by_schedule); // 不回傳給前端
+      return $shop;
+    });
 
-    $shops = $this->transformData($shops, $fields);
-
-    // 🔹 回傳 JSON
     return $this->success('取得商家列表成功', $shops);
   }
 
 
-  // 取得列表
-  // public function index()
-  // {
-
-  //   $shops = Shop::all();
-  //   $fields = [
-  //     'id',
-  //     'brand',
-  //     'branch',
-  //     'phone',
-  //     'description',
-  //     'is_orderable',
-  //     'detail',
-  //     'image_path',
-  //     'address_data_id',
-  //     'city',
-  //     'area',
-  //     'street'
-  //   ];
-  //   $shops = $this->transformData($shops, $fields);
-  //   return response()->json($shops);
-  // }
 
   // 新增
   public function store(Request $request, CaptchaController $captcha)
@@ -118,12 +142,19 @@ class ShopController extends Controller
       ],
       'branch' => 'required|string',
       'phone' => 'required|string',
-      'address_data_id' => 'required|numeric',
       'detail' => 'required|string',
     ]);
 
     $shop = Shop::create(array_merge(
-      $request->only(['brand', 'branch', 'phone', 'address_data_id', 'detail']),
+      $request->only([
+        'brand',
+        'branch',
+        'phone',
+        'city',
+        'area',
+        'street',
+        'detail'
+      ]),
       [
         'user_id' => $request->user()->id,
       ]
@@ -136,10 +167,32 @@ class ShopController extends Controller
   }
 
   // 單筆
-  public function show($id)
+  public function show($id, ScheduleService $scheduleService)
+  // public function show($id)
   {
-    $shop = Shop::findOrFail($id);
-    return response()->json($shop);
+    // print_r("Merging cross-week schedules\n");
+    // fwrite(STDERR, "Merging cross-week schedules\n");
+    // fwrite(\STDERR, "Merging cross-week schedules\n");
+    // error_log("Merging cross-week schedules for shop $id");
+    Log::info("訊息");    // 輸出 INFO
+    Log::warning("警告"); // 輸出 WARNING
+    Log::error("錯誤");   // 輸出 ERROR
+    $shop = Shop::with(['tabs.products', 'schedules'])->find($id);
+    // Log::info('shop------------', [
+    //   'value' => $shop->schedules->toArray(),
+    // ]);
+    // $merged = $scheduleService->mergeCrossWeek($shop->schedules->toArray());
+
+    // Log::info('merged-+++++++++++++++++++++-', [
+    //   'value' => $merged,
+    // ]);
+
+    // $shop->setRelation('schedules', collect($merged));
+
+    Log::info('shop------------', [
+      'value' => $shop,
+    ]);
+    return $this->success('取得店家資料成功',  $shop);
   }
 
   // 更新

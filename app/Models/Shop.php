@@ -11,21 +11,28 @@ class Shop extends Model
   use HasFactory, SoftDeletes;
 
   protected $fillable = [
-    'brand',
-    'branch',
-    'phone',
-    'description',
-    'is_orderable',
-    'is_open',
-    'delivery_km',
-    'delivery_price',
-    'phone_verified_at',
-    'address_data_id',
-    'detail',
-    'lat',
-    'lng',
-    'image_path',
-    'user_id',
+    'brand',              // 品牌名稱
+    'branch',             // 分店名稱
+    'phone',              // 聯絡電話
+    'description',        // 店家描述 / 簡介
+
+    'is_orderable',       // 是否可下單
+    'is_open',            // 是否營業中
+
+    'delivery_km',        // 外送距離（公里）
+    'delivery_price',     // 外送費用
+
+    'phone_verified_at',  // 電話驗證時間
+    'city',               // 縣市
+    'area',               // 區域
+    'street',             // 街道
+    'detail',             // 詳細地址（樓層、門牌等）
+
+    'lat',                // 緯度
+    'lng',                // 經度
+
+    'image_path',         // 店家圖片路徑
+    'user_id',            // 所屬使用者 ID
   ];
 
   protected $hidden = [
@@ -43,40 +50,33 @@ class Shop extends Model
   {
     return $this->belongsTo(User::class);
   }
-  // Accessor：合併 address_data 的欄位
-  // protected $appends = ['city', 'area', 'street', 'category', 'products'];
-  protected $appends = ['city', 'area', 'street'];
   public function fullAddress()
   {
     return "{$this->city}{$this->area}{$this->street}";
   }
 
-  public function addressData()
-  {
-    return $this->belongsTo(AddressData::class, 'address_data_id');
-  }
 
 
-  public function getCityAttribute()
-  {
-    return $this->addressData?->city;
-  }
+  // public function getCityAttribute()
+  // {
+  //   return $this->addressData?->city;
+  // }
 
-  public function getAreaAttribute()
-  {
-    return $this->addressData?->area;
-  }
+  // public function getAreaAttribute()
+  // {
+  //   return $this->addressData?->area;
+  // }
 
-  public function getStreetAttribute()
-  {
-    return $this->addressData?->street;
-  }
+  // public function getStreetAttribute()
+  // {
+  //   return $this->addressData?->street;
+  // }
 
   // 可選：完整地址
-  public function getFullAddressAttribute()
-  {
-    return "{$this->city}{$this->area}{$this->street}{$this->detail}";
-  }
+  // public function getFullAddressAttribute()
+  // {
+  //   return "{$this->city}{$this->area}{$this->street}{$this->detail}";
+  // }
 
   // public function getCategoryAttribute()
   // {
@@ -112,5 +112,14 @@ class Shop extends Model
   public function tabs()
   {
     return $this->hasMany(Tab::class);
+  }
+
+  public function fans()
+  {
+    return $this->belongsToMany(User::class, 'favorite_shops')->withTimestamps();
+  }
+  public function schedules()
+  {
+    return $this->hasMany(Schedule::class);
   }
 }

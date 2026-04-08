@@ -11,8 +11,8 @@ return new class extends Migration
     Schema::create('schedules', function (Blueprint $table) {
       $table->id();
       $table->integer('week'); // 星期數字
-      $table->time('start_time'); // LocalTime 對應 time
-      $table->time('end_time');
+      $table->integer('start_time'); // LocalTime 對應 time
+      $table->integer('end_time');
       // $table->integer('type')->nullable(); // 可空
       $table->unsignedBigInteger('shop_id'); // 多對一關聯
       $table->timestamps();

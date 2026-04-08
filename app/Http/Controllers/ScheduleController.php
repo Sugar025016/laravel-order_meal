@@ -3,48 +3,56 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Schedule;
+use App\Services\ScheduleService;
 
 class ScheduleController extends Controller
 {
-  // 取得某店家的所有排程
-  public function index($shopId)
-  {
-    $schedules = Schedule::where('shop_id', $shopId)->get();
-    return response()->json($schedules);
-  }
 
-  // 取得單筆排程
-  public function show($shopId, $id)
+  public function index($shopId, ScheduleService $timeService)
   {
-    $schedule = Schedule::where('shop_id', $shopId)->findOrFail($id);
-    return response()->json($schedule);
-  }
+    $schedules = Schedule::where('shop_id', $shopId)
+      ->orderBy('start_time')
+      ->get()
+      ->toArray();
 
-  // 新增排程
-  public function store(Request $request, $shopId)
+    $merged = $timeService->mergeCrossWeek($schedules);
+
+    return response()->json($merged);
+  }
+  public function store(Request $request, $shopId, ScheduleService $timeService)
   {
     $validatedData = $request->validate([
       '*.week' => 'required|integer|min:1|max:7',
-      '*.start_time' => 'required|date_format:H:i',
-      '*.end_time' => 'required|date_format:H:i|after:start_time',
+      '*.start_time' => 'required|integer|min:0',
+      '*.end_time'   => 'required|integer|gt:start_time|max:11520',
     ]);
 
-    // 刪掉該商家所有舊排程
-    Schedule::where('shop_id', $shopId)->delete();
+    // 1. 拆跨週
+    $segments = $timeService->splitCrossWeek($validatedData);
 
-    $results = [];
+    // 2. 檢查重疊
+    $timeService->assertNoOverlap($segments);
 
-    // 新增所有排程
-    foreach ($validatedData as $item) {
-      $schedule = Schedule::create(array_merge($item, ['shop_id' => $shopId]));
-      $results[] = $schedule;
-    }
+    DB::transaction(function () use ($shopId, $segments, $timeService) {
+
+      Schedule::where('shop_id', $shopId)->delete();
+
+      foreach ($segments as $seg) {
+        Schedule::create([
+          'shop_id'    => $shopId,
+          'week'       => $timeService->calcWeek($seg['start']),
+          'start_time' => $seg['start'],
+          'end_time'   => $seg['end'],
+        ]);
+      }
+    });
 
     return response()->json([
-      'status' => true,
+      'status'  => true,
       'message' => '商家排程已更新',
-      'data' => $results,
+      'data'    => $segments,
     ]);
   }
 

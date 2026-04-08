@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Address;
 
 
 class User extends Authenticatable
@@ -35,7 +36,6 @@ class User extends Authenticatable
     'remember_token',
     'created_at',
     'updated_at',
-    'current_address_id',
     'currentAddressRelation',
   ];
 
@@ -69,9 +69,22 @@ class User extends Authenticatable
   {
     return $this->belongsTo(Address::class, 'current_address_id');
   }
-  // 關聯：使用 foreign key
-  public function address_data()
+
+
+  public function favoriteShops()
   {
-    return $this->belongsTo(AddressData::class, 'address_data_id');
+    return $this->belongsToMany(Shop::class, 'favorite_shops')->withTimestamps();
+  }
+
+  public function carts()
+  {
+    return $this->hasMany(CartShop::class);
+  }
+
+  public function getCartShopCountAttribute()
+  {
+    return $this->carts()
+      ->distinct('shop_id')
+      ->count('shop_id');
   }
 }

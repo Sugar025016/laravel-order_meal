@@ -5,13 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Cart extends Model
+class CartShop extends Model
 {
   use HasFactory;
   protected $fillable = [
-    'remark',
-    'qty',
-    'product_id',
     'shop_id',
     'user_id',
   ];
@@ -26,13 +23,13 @@ class Cart extends Model
     return $this->belongsTo(User::class);
   }
 
-  // public function products()
-  // {
-  //   return $this->hasMany(Product::class);
-  // }
-
-  public function product()
+  public function cartItems()
   {
-    return $this->belongsTo(Product::class); // 單個產品
+    return $this->hasMany(CartItem::class);
+  }
+
+  public function shop()
+  {
+    return $this->belongsTo(Shop::class); // 單個產品
   }
 }

@@ -5,29 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Address extends Model
+class CartItem extends Model
 {
   use HasFactory;
-
-  protected $table = 'addresses';
-
   protected $fillable = [
-    'city',
-    'area',
-    'street',
-    'detail',
-    'lat',
-    'lng',
-    'user_id',
+    'cart_shop_id',
+    'product_id',
+    'qty',
+    'remark',
   ];
-
   protected $hidden = [
     'created_at',
     'updated_at',
   ];
 
-  public function user()
+
+  public function cartShop()
   {
-    return $this->belongsTo(User::class);
+    return $this->belongsTo(CartShop::class);
+  }
+
+  public function product()
+  {
+    return $this->belongsTo(Product::class);
   }
 }

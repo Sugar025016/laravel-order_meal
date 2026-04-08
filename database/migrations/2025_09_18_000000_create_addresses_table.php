@@ -10,19 +10,19 @@ return new class extends Migration
   {
     Schema::create('addresses', function (Blueprint $table) {
       $table->id(); // id 自增
+      $table->string('city')->nullable();
+      $table->string('area')->nullable();
+      $table->string('street')->nullable();
       $table->string('detail')->nullable();
       $table->double('lat', 10, 7)->default(0); // 精度更合理
       $table->double('lng', 10, 7)->default(0); // 精度更合理
 
-      $table->unsignedBigInteger('address_data_id');
       $table->unsignedBigInteger('user_id');
 
       $table->timestamps(); // created_at / updated_at
 
       // 外鍵
       $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-      // $table->integer('address_data_id')->unsigned();
-      $table->foreign('address_data_id')->references('id')->on('address_data')->onDelete('cascade');
     });
   }
 
@@ -30,7 +30,6 @@ return new class extends Migration
   {
     Schema::table('addresses', function (Blueprint $table) {
       $table->dropForeign(['user_id']);
-      $table->dropForeign(['address_data_id']);
     });
     Schema::dropIfExists('addresses');
   }
